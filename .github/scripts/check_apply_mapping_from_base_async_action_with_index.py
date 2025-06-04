@@ -24,9 +24,6 @@ ALTER TABLE queues.sua_fila_async_action ADD INDEX "action_data_hash_status_idx"
 ```sql
 SHOW INDEX FROM queues.sua_fila_async_action;
 ```
-
-
-
 """
 
 def get_github_pr_details():
