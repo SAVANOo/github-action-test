@@ -158,11 +158,28 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
                 # continue # Se não migrou no patch, não comenta. Adicione continue se quiser ser estrito com o patch.
 
         if migrated_in_patch:
-            print(f"  INFO: Preparando para comentar sobre {filename}.") # Adicionado print
+            print(f"  INFO: Preparando para comentar sobre {filename}.")
             formatted_comment = COMMENT_MESSAGE_TEMPLATE.format(class_name=class_name, file_path=filename)
-            # ... resto da lógica de comentário ...
-        else: # Adicionado para clareza
-             print(f"  INFO: Nenhuma migração qualificada para comentário encontrada para {filename} após análise de patch/fallback.")
+
+            identifier_string = f"A classe `{class_name}` no arquivo `{filename}`"
+
+            # <<<< DEBUG DE COMENTÁRIOS EXISTENTES >>>>
+            print(f"    DEBUG: Identifier string: '{identifier_string}'")
+            print(f"    DEBUG: Checando {len(existing_comments_bodies)} comentários existentes:")
+            for i, c_body in enumerate(existing_comments_bodies):
+                print(f"      DEBUG: Comentário existente #{i}: '{c_body[:100]}...'") # Primeiros 100 chars
+                if identifier_string in c_body:
+                    print(f"        DEBUG: IDENTIFIER ENCONTRADO NO COMENTÁRIO ACIMA!")
+            # <<<< FIM DO DEBUG DE COMENTÁRIOS EXISTENTES >>>>
+
+            already_commented = any(identifier_string in c_body for c_body in existing_comments_bodies)
+            print(f"    DEBUG: 'already_commented' é {already_commented} para este arquivo.") # Adicionado
+
+            if not already_commented:
+                print(f"    INFO: Adicionando comentário para {filename} à lista de postagem.") # Adicionado
+                files_requiring_comment.append(formatted_comment)
+            else:
+                print(f"  Comentário para {filename} já existe (ou identificador encontrado). Pulando.")
 
 
 def main():
@@ -174,6 +191,18 @@ def main():
 
     existing_comments = pr_obj.get_issue_comments()
     existing_comments_bodies = [comment.body for comment in existing_comments]
+
+    # <<<< DEBUG INICIAL DE COMENTÁRIOS EXISTENTES >>>>
+    print(f"DEBUG INICIAL: Número total de comentários existentes no PR: {len(existing_comments_bodies)}")
+    # Se quiser ver todos no início (pode ser verboso):
+    if existing_comments_bodies: # Só imprime se houver comentários
+        print("DEBUG INICIAL: Listando início dos comentários existentes:")
+        for i, c_body in enumerate(existing_comments_bodies):
+            print(f"  DEBUG INICIAL: Comentário #{i} (início): '{c_body[:150].replace('\n', ' ')}...'") # Primeiros 150 chars, newlines substituídos por espaço para melhor visualização no log
+    else:
+        print("DEBUG INICIAL: Nenhum comentário existente encontrado no PR.")
+    # <<<< FIM DO DEBUG INICIAL >>>>
+
 
     check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api, existing_comments_bodies)
 
