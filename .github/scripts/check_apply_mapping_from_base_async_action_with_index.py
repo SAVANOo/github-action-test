@@ -5,8 +5,8 @@ import requests
 from github import Github
 
 BASE_ASYNC_ACTION_EXTENSION_REGEX = re.compile(r"class\s+([\w\d_]+)\s+extends\s+BaseAsyncAction")
-APPLY_BASE_MAPPING_REGEX = re.compile(r"\bapplyBaseMapping\b")
-APPLY_BASE_MAPPING_WITH_INDEX_REGEX = re.compile(r"\bapplyBaseMappingWithIndex\b")
+APPLY_BASE_MAPPING_REGEX = re.compile(r"\bapplyBaseMappings\b")
+APPLY_BASE_MAPPING_WITH_INDEX_REGEX = re.compile(r"\bapplyBaseMappingsWithIndex\b")
 
 COMMENT_MESSAGE_TEMPLATE = """
 Troca de `applyBaseMapping` para `applyBaseMappingWithIndex`:
