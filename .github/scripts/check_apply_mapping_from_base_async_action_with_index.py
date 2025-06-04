@@ -10,16 +10,23 @@ APPLY_BASE_MAPPING_REGEX = re.compile(r"\bapplyBaseMappings\b")
 APPLY_BASE_MAPPING_WITH_INDEX_REGEX = re.compile(r"\bapplyBaseMappingsWithIndex\b")
 
 COMMENT_MESSAGE_TEMPLATE = """
-Troca de `applyBaseMapping` para `applyBaseMappingWithIndex`:
+> [!WARNING]
+> {identifier_alert_message}
+>
+> Ao migrar para o mapping que possui índices, é necessário garantir que os índices necessários estejam pré-criados no banco de dados para evitar problemas de locks durante o deploy:
 
-A classe `{class_name}` no arquivo `{file_path}` foi modificada para usar `applyBaseMappingWithIndex` em vez de `applyBaseMapping`.
+- [ ] Inserir o índice em banco:
+```sql
+ALTER TABLE queues.sua_fila_async_action ADD INDEX "action_data_hash_status_idx" (action_data_hash, status) ALGORITHM = INSTANT, LOCK = NONE;
+```
 
-**Antes de realizar o deploy, por favor, garanta que realizou:**
+- [ ] Validar se o índice foi criado corretamente (action_data_hash_status_idx):
+```sql
+SHOW INDEX FROM queues.sua_fila_async_action;
+```
 
-- [ ] Script pré deploy adicionando via DBA os índices necessários para a `{class_name}`.
 
-[!IMPORTANT]
-Ao migrar de `applyBaseMapping` para `applyBaseMappingWithIndex`, é necessário garantir que os índices necessários estejam criados no banco de dados para evitar problemas de locks durante o deploy.
+
 """
 
 def get_github_pr_details():
@@ -149,14 +156,8 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
             print(f"  INFO: Preparando para comentar sobre {filename}.", flush=True)
 
             try:
-                print("    DEBUG CHECKPOINT 2: Antes de formatar COMMENT_MESSAGE_TEMPLATE", flush=True)
-                formatted_comment = COMMENT_MESSAGE_TEMPLATE.format(class_name=class_name, file_path=filename)
-                print("    DEBUG CHECKPOINT 3: DEPOIS de formatar COMMENT_MESSAGE_TEMPLATE", flush=True)
-
-                print("    DEBUG CHECKPOINT 4: Antes de criar identifier_string", flush=True)
-                identifier_string = f"A classe `{class_name}` no arquivo `{filename}`"
-                print("    DEBUG CHECKPOINT 5: DEPOIS de criar identifier_string", flush=True)
-                print(f"    DEBUG IDENTIFIER: Identifier string é: '{identifier_string}'", flush=True)
+                identifier_alert_message = f"A fila `{class_name}` substituiu o mapeamento padrão de `applyBaseMapping()` por `applyBaseMappingWithIndex()`."
+                formatted_comment = COMMENT_MESSAGE_TEMPLATE.format(identifier_alert_message=identifier_alert_message)
 
             except Exception as e_format:
                 print(f"    ERRO CRÍTICO durante formatação/criação de string: {e_format}", flush=True)
@@ -168,7 +169,7 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
             found_identifier_in_existing_comments = False
             if existing_comments_bodies:
                 for i, c_body in enumerate(existing_comments_bodies):
-                    is_present = identifier_string in c_body
+                    is_present = identifier_alert_message in c_body
                     cleaned_c_body_part_check = c_body[:100].replace('\n', ' ') # CORREÇÃO APLICADA
                     print(f"      DEBUG COMMENTS_EXIST: Comentário #{i} (início): '{cleaned_c_body_part_check}...' ({'IDENTIFIER ENCONTRADO' if is_present else 'não encontrado'})", flush=True)
                     if is_present:
@@ -177,8 +178,8 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
                 print("      DEBUG COMMENTS_EXIST: Nenhum comentário existente para checar.", flush=True)
 
 
-            print("    DEBUG CHECKPOINT 7: Antes de 'any(identifier_string in c_body)'", flush=True)
-            already_commented = any(identifier_string in c_body for c_body in existing_comments_bodies)
+            print("    DEBUG CHECKPOINT 7: Antes de 'any(identifier_alert_message in c_body)'", flush=True)
+            already_commented = any(identifier_alert_message in c_body for c_body in existing_comments_bodies)
             print(f"    DEBUG CHECKPOINT 8: DEPOIS de 'any', 'already_commented' é {already_commented}", flush=True)
             if found_identifier_in_existing_comments != already_commented:
                  print(f"    DEBUG WARNING: Discrepância entre loop de debug e 'any()' para already_commented!", flush=True)
