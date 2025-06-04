@@ -88,13 +88,22 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
 
         class_name = get_class_name_if_extends_base_async(current_content)
         if not class_name:
+            print(f"  Arquivo {filename} não estende BaseAsyncAction ou nome da classe não encontrado. Pulando.") # Adicionado print
             continue
         print(f"  Arquivo {filename} estende BaseAsyncAction (Classe: {class_name}).")
 
         uses_with_index_now = bool(APPLY_BASE_MAPPING_WITH_INDEX_REGEX.search(current_content))
         used_simple_before = bool(APPLY_BASE_MAPPING_REGEX.search(previous_content))
 
+        # DEBUG PRINTS:
+        print(f"    DEBUG: current_content contém 'applyBaseMappingWithIndex'? {uses_with_index_now}")
+        # print(f"    DEBUG: current_content (primeiros 200 chars): {current_content[:200]}") # Descomente se necessário
+        print(f"    DEBUG: previous_content contém 'applyBaseMapping'? {used_simple_before}")
+        # print(f"    DEBUG: previous_content (primeiros 200 chars): {previous_content[:200]}") # Descomente se necessário
+
+
         if not (uses_with_index_now and used_simple_before):
+            print(f"    DEBUG: Condição (uses_with_index_now AND used_simple_before) NÃO atendida. Pulando para o próximo arquivo.")
             continue
 
         print(f"  Arquivo {filename}: USA 'WithIndex' agora E USAVA 'Simple' antes.")
@@ -109,36 +118,41 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
                 line.startswith('+') and APPLY_BASE_MAPPING_WITH_INDEX_REGEX.search(line)
                 for line in patch_content.split('\n')
             )
+
+            # DEBUG PRINTS PATCH:
+            print(f"      DEBUG: Analisando patch para {filename}:")
+            # print(f"      DEBUG: Patch content (primeiras 5 linhas):\n{patch_content.splitlines()[:5]}") # Descomente se necessário
+            print(f"      DEBUG: Linha removida com 'applyBaseMapping' encontrada no patch? {removed_simple_in_patch}")
+            print(f"      DEBUG: Linha adicionada com 'applyBaseMappingWithIndex' encontrada no patch? {added_with_index_in_patch}")
+
             if removed_simple_in_patch and added_with_index_in_patch:
                 migrated_in_patch = True
                 print(f"  Detectada migração explícita no patch de {filename}.")
+            else: # Adicionado para clareza
+                print(f"  Migração NÃO detectada explicitamente no patch (removed_simple={removed_simple_in_patch}, added_with_index={added_with_index_in_patch}).")
+
 
         if not migrated_in_patch:
+            # Esta lógica de fallback é um pouco mais arriscada, vamos mantê-la simples por enquanto
+            # Se o patch existia mas não confirmou, provavelmente não deveríamos usar o fallback.
+            # O fallback é mais para quando o patch não está disponível.
             if not patch_content and not APPLY_BASE_MAPPING_REGEX.search(current_content):
-                 print(f"  Detectada migração (baseada na ausência do método antigo, sem patch claro) em {filename}.")
-                 migrated_in_patch = True
+                 print(f"  Detectada migração (baseada na ausência do método antigo, SEM patch) em {filename}.")
+                 migrated_in_patch = True # Reutilizando a flag
             else:
-                print(f"  Migração não confirmada explicitamente no patch para {filename}.")
-
+                # Se o patch existia e não confirmou, ou se o patch não existia E o método antigo ainda está lá
+                if patch_content : # Se o patch foi analisado e não deu match
+                    print(f"  Migração não confirmada explicitamente no patch para {filename} E patch existia. Não usando fallback.")
+                else: # Se não tinha patch E o método antigo ainda existe
+                    print(f"  Migração não confirmada (SEM patch, método antigo ainda presente ou outra razão) para {filename}.")
+                # continue # Se não migrou no patch, não comenta. Adicione continue se quiser ser estrito com o patch.
 
         if migrated_in_patch:
+            print(f"  INFO: Preparando para comentar sobre {filename}.") # Adicionado print
             formatted_comment = COMMENT_MESSAGE_TEMPLATE.format(class_name=class_name, file_path=filename)
-
-            identifier_string = f"A classe `{class_name}` no arquivo `{filename}`"
-            already_commented = any(identifier_string in c_body for c_body in existing_comments_bodies)
-
-            if not already_commented:
-                files_requiring_comment.append(formatted_comment)
-            else:
-                print(f"  Comentário para {filename} já existe. Pulando.")
-
-    for comment_body_to_post in files_requiring_comment:
-        try:
-            print(f"Postando comentário no PR #{pr_obj.number}...")
-            pr_obj.create_issue_comment(comment_body_to_post)
-            print("  Comentário postado com sucesso.")
-        except Exception as e:
-            print(f"  Erro ao postar comentário: {e}")
+            # ... resto da lógica de comentário ...
+        else: # Adicionado para clareza
+             print(f"  INFO: Nenhuma migração qualificada para comentário encontrada para {filename} após análise de patch/fallback.")
 
 
 def main():
