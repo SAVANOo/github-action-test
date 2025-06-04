@@ -92,6 +92,16 @@ def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api,
             continue
         print(f"  Arquivo {filename} estende BaseAsyncAction (Classe: {class_name}).")
 
+        print(f"    conteúdo 'previous_content' (SHA: {pr_obj.base.sha}):")
+        print("    ----------------------------------------------------")
+        print(f"{previous_content}")
+        print("    ----------------------------------------------------")
+
+        print(f"    conteúdo 'current_content' (SHA: {pr_obj.head.sha}):")
+        print("    ----------------------------------------------------")
+        print(f"{current_content}")
+        print("    ----------------------------------------------------")
+
         uses_with_index_now = bool(APPLY_BASE_MAPPING_WITH_INDEX_REGEX.search(current_content))
         used_simple_before = bool(APPLY_BASE_MAPPING_REGEX.search(previous_content))
 
