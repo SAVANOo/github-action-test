@@ -7,7 +7,7 @@ on:
       - '**/*.groovy'
 
 jobs:
-  check-migration-python-styled:
+  check-apply-mapping-from-base-async-action-with-index:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write

@@ -67,7 +67,7 @@ def get_class_name_if_extends_base_async(file_content):
     match = BASE_ASYNC_ACTION_EXTENSION_REGEX.search(file_content)
     return match.group(1) if match else None
 
-def check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api, existing_comments_bodies):
+def check_apply_mapping_with_index(pr_obj, repo_obj_pygithub, files_from_api, existing_comments_bodies):
     files_requiring_comment = []
 
     for file_data_from_api in files_from_api:
@@ -141,7 +141,7 @@ def main():
         for i, c_body in enumerate(existing_comments_bodies):
             cleaned_c_body_part = c_body[:150].replace('\n', ' ')
 
-    comments_to_post = check_base_async_action_migration(pr_obj, repo_obj_pygithub, files_from_api, existing_comments_bodies)
+    comments_to_post = check_apply_mapping_with_index(pr_obj, repo_obj_pygithub, files_from_api, existing_comments_bodies)
 
     if comments_to_post:
         for comment_body in comments_to_post:
