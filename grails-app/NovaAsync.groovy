@@ -1,0 +1,2 @@
+class TesteDeAsyncAsyncAction extends BaseAsyncAction {
+}
