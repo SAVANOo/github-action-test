@@ -1,13 +1,13 @@
-name: Check apply mapping from BaseAsyncAction with index
+name: Check created AsyncAction
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - '**/*.groovy'
+      - '**/*AsyncAction.groovy'
 
 jobs:
-  check-apply-mapping-from-base-async-action-with-index:
+  check-created-new-async-action:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -22,14 +22,14 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
-          cache-dependency-path: '.github/dependencies/check_apply_mapping_from_base_async_action_with_index/requirements.txt'
+          cache-dependency-path: '.github/dependencies/check_created_new_async_action/requirements.txt'
 
       - name: Install dependencies
-        run: pip install -r .github/dependencies/check_apply_mapping_from_base_async_action_with_index/requirements.txt
+        run: pip install -r .github/dependencies/check_created_new_async_action/requirements.txt
 
-      - name: Run check apply mapping from BaseAsyncAction with index
+      - name: Run check created new AsyncAction
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF: ${{ github.ref }}
-        run: python .github/scripts/check_apply_mapping_from_base_async_action_with_index.py
+        run: python .github/scripts/check_created_new_async_action.py
