@@ -20,7 +20,6 @@ COMMENT_MESSAGE_TEMPLATE_NEW_ACTION = """
 > Obs: Não esqueça da convenção de nomenclatura para criação de índices documentada no [livro de elite](https://github.com/asaasdev/livro-de-elite/blob/3b5048d787332b170fe0403c70a6d1b65055b3c0/processes/asaas.md?plain=1#L818).
 """
 
-
 def get_github_pr_details():
     token = os.getenv('GITHUB_TOKEN')
     repository_name = os.getenv('GITHUB_REPOSITORY')
