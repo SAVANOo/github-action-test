@@ -38,7 +38,7 @@ module.exports = async({ github, context, core }) => {
         });
 
         const newAsyncActionFile = files.find(file =>
-            file.status === 'added' && file.filename.endsWith('AsyncAction.groovy')
+            file.status === "added" && file.filename.endsWith("AsyncAction.groovy")
         );
 
         if (newAsyncActionFile) {
