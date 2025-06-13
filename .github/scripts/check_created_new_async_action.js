@@ -19,11 +19,7 @@ module.exports = async({ github, context, core }) => {
         const prNumber = context.issue.number;
         const { owner, repo } = context.repo;
 
-        const { data: existingComments } = await github.rest.issues.listComments({
-            owner,
-            repo,
-            issue_number: prNumber,
-        });
+        const { data: existingComments } = await github.rest.issues.listComments({ owner, repo, issue_number: prNumber });
 
         const alreadyCommented = existingComments.some(comment =>
             comment.body.includes("### Nova AsyncAction criada!")
@@ -31,11 +27,7 @@ module.exports = async({ github, context, core }) => {
 
         if (alreadyCommented) return;
 
-        const files = await github.paginate(github.rest.pulls.listFiles, {
-            owner,
-            repo,
-            pull_number: prNumber
-        });
+        const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: prNumber });
 
         const newAsyncActionFile = files.find(file =>
             file.status === "added" && file.filename.endsWith("AsyncAction.groovy")
