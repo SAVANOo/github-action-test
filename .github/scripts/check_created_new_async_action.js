@@ -1,5 +1,5 @@
-module.exports = async ({ github, context, core }) => {
-  const COMMENT_MESSAGE = `
+module.exports = async({ github, context, core }) => {
+    const COMMENT_MESSAGE = `
 > [!WARNING]
 > ### Nova AsyncAction criada!
 >
@@ -15,42 +15,41 @@ module.exports = async ({ github, context, core }) => {
 > Obs: Não esqueça da convenção de nomenclatura para criação de índices documentada no [livro de elite](https://github.com/asaasdev/livro-de-elite/blob/3b5048d787332b170fe0403c70a6d1b65055b3c0/processes/asaas.md?plain=1#L818).
 `;
 
-  try {
-    const prNumber = context.issue.number;
-    const { owner, repo } = context.repo;
+    try {
+        const prNumber = context.issue.number;
+        const { owner, repo } = context.repo;
 
-    const { data: existingComments } = await github.rest.issues.listComments({
-      owner,
-      repo,
-      issue_number: prNumber,
-    });
+        const { data: existingComments } = await github.rest.issues.listComments({
+            owner,
+            repo,
+            issue_number: prNumber,
+        });
 
-    const alreadyCommented = existingComments.some(comment =>
-      comment.body.includes("### Nova AsyncAction criada!")
-    );
+        const alreadyCommented = existingComments.some(comment =>
+            comment.body.includes("### Nova AsyncAction criada!")
+        );
 
-    if (alreadyCommented) return;
+        if (alreadyCommented) return;
 
-    const files = await github.paginate(github.rest.pulls.listFiles, {
-      owner,
-      repo,
-      pull_number: prNumber,
-    });
+        const files = await github.paginate(github.rest.pulls.listFiles, {
+            owner,
+            repo,
+            pull_number: prNumber
+        });
 
-    const newAsyncActionFile = files.find(file =>
-      file.status === 'added' && file.filename.endsWith('AsyncAction.groovy')
-    );
+        const newAsyncActionFile = files.find(file =>
+            file.status === 'added' && file.filename.endsWith('AsyncAction.groovy')
+        );
 
-    if (newAsyncActionFile) {
-      await github.rest.issues.createComment({
-        owner,
-        repo,
-        issue_number: prNumber,
-        body: COMMENT_MESSAGE,
-      });
+        if (newAsyncActionFile) {
+            await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: COMMENT_MESSAGE
+            });
+        }
+    } catch (error) {
+        core.setFailed(`ERRO: Falha ao verificar a criação de AsyncAction: ${error.message}`);
     }
-
-  } catch (error) {
-    core.setFailed(`ERRO: Falha ao verificar a criação de AsyncAction: ${error.message}`);
-  }
 };
